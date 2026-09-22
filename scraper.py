@@ -4,7 +4,8 @@ import json
 import requests
 import cloudscraper
 
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyk5mypVMTQyMTmGMhGm_MgKjSaHc6GlM6jironfXMqX3PNG1eQGjZ98gm_8Cf8bX7H/exec"
+# YENİ WEB APP URL'İNİZ
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw9Ylthm7pwCqmP5BHHcShBl2tEgWW8m2JCGbJUlS0wqwNDpAvASCjBJx6TNOSTmngu/exec"
 
 scraper = cloudscraper.create_scraper(
     browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
@@ -16,7 +17,7 @@ def run_scraper():
     baslangic_sayfa = 1
     bitis_sayfa = 5
     try:
-        res = requests.get(WEB_APP_URL, timeout=10)
+        res = requests.get(WEB_APP_URL, timeout=15, allow_redirects=True)
         if res.status_code == 200:
             config = res.json()
             baslangic_sayfa = int(config.get("baslangic", 1))
@@ -25,12 +26,10 @@ def run_scraper():
     except Exception as e:
         print(f"Ayar çekilemedi, varsayılan (1-5) kullanılıyor: {e}")
 
-    # Doğru ana sayfa / liste URL yapısı
     base_url = "https://balbums.st"
     toplanan_linkler = []
     
     for page in range(baslangic_sayfa, bitis_sayfa + 1):
-        # 1. sayfa için direkt domain, sonraki sayfalar için ?page= parametresi
         url = f"{base_url}/?page={page}" if page > 1 else f"{base_url}/"
         try:
             response = scraper.get(url, timeout=15)
@@ -60,7 +59,7 @@ def run_scraper():
             "son_sayfa": bitis_sayfa
         }
         headers = {'Content-Type': 'application/json'}
-        res = requests.post(WEB_APP_URL, data=json.dumps(payload), headers=headers)
+        res = requests.post(WEB_APP_URL, data=json.dumps(payload), headers=headers, allow_redirects=True)
         print(f"Google Sheets Kayıt Yanıtı: {res.text}")
     else:
         print("Yeni link bulunamadı.")
