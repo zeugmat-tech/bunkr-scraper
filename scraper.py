@@ -7,6 +7,7 @@ import cloudscraper
 # YENİ WEB APP URL'İNİZ
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw9Ylthm7pwCqmP5BHHcShBl2tEgWW8m2JCGbJUlS0wqwNDpAvASCjBJx6TNOSTmngu/exec"
 
+
 scraper = cloudscraper.create_scraper(
     browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
 )
