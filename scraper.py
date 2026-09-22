@@ -13,25 +13,25 @@ scraper = cloudscraper.create_scraper(
 def run_scraper():
     print("Google Sheets'ten sayfa aralığı alınıyor...")
     
-    # 1. Sheets'ten mevcut B1 ve C1 değerlerini çek
     baslangic_sayfa = 1
     bitis_sayfa = 5
     try:
-        res = requests.get(WEB_APP_URL)
+        res = requests.get(WEB_APP_URL, timeout=10)
         if res.status_code == 200:
             config = res.json()
-            baslangic_sayfa = config.get("baslangic", 1)
-            bitis_sayfa = config.get("bitis", 5)
+            baslangic_sayfa = int(config.get("baslangic", 1))
+            bitis_sayfa = int(config.get("bitis", 5))
             print(f"Tarama Aralığı Alındı: Sayfa {baslangic_sayfa} -> {bitis_sayfa}")
     except Exception as e:
         print(f"Ayar çekilemedi, varsayılan (1-5) kullanılıyor: {e}")
 
-    base_url = "https://balbums.st/albums"
+    # Doğru ana sayfa / liste URL yapısı
+    base_url = "https://balbums.st"
     toplanan_linkler = []
     
-    # 2. Belirtilen aralıktaki sayfaları Cloudflare aşarak tara
     for page in range(baslangic_sayfa, bitis_sayfa + 1):
-        url = f"{base_url}?page={page}"
+        # 1. sayfa için direkt domain, sonraki sayfalar için ?page= parametresi
+        url = f"{base_url}/?page={page}" if page > 1 else f"{base_url}/"
         try:
             response = scraper.get(url, timeout=15)
             if response.status_code == 200:
@@ -52,16 +52,18 @@ def run_scraper():
         except Exception as e:
             print(f"Sayfa {page} İstek Hatası: {str(e)}")
 
-    # 3. Sonuçları Google Sheets Web App'e gönder
-    payload = {
-        "linkler": toplanan_linkler,
-        "baslangic_sayfa": baslangic_sayfa,
-        "bitis_sayfa": bitis_sayfa,
-        "son_sayfa": bitis_sayfa
-    }
-    headers = {'Content-Type': 'application/json'}
-    res = requests.post(WEB_APP_URL, data=json.dumps(payload), headers=headers)
-    print(f"Google Sheets Kayıt Yanıtı: {res.text}")
+    if toplanan_linkler:
+        payload = {
+            "linkler": toplanan_linkler,
+            "baslangic_sayfa": baslangic_sayfa,
+            "bitis_sayfa": bitis_sayfa,
+            "son_sayfa": bitis_sayfa
+        }
+        headers = {'Content-Type': 'application/json'}
+        res = requests.post(WEB_APP_URL, data=json.dumps(payload), headers=headers)
+        print(f"Google Sheets Kayıt Yanıtı: {res.text}")
+    else:
+        print("Yeni link bulunamadı.")
 
 if __name__ == "__main__":
     run_scraper()
